@@ -67,6 +67,7 @@ const normalizeQuote = (data: any): Quotation => {
     customerAddress: data.customerAddress || data.customer_address || '',
     vehicleMake: data.vehicleMake || data.vehicle_make || '',
     vehicleModel: data.vehicleModel || data.vehicle_model || '',
+    vehicleNo: data.vehicleNo || data.vehicle_no || '',
     lineItems: parseLineItems(data.lineItems || data.line_items),
     discount: Number(data.discount || 0),
     taxRate: Number(data.taxRate !== undefined ? data.taxRate : (data.tax_rate !== undefined ? data.tax_rate : 18)),

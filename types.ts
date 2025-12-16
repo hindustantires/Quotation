@@ -16,7 +16,7 @@ export interface Quotation {
   customerAddress: string;
   vehicleMake: string;
   vehicleModel: string;
-  // vehicleYear removed
+  vehicleNo?: string; // Added optional Vehicle Number
   lineItems: LineItem[];
   discount: number; // fixed amount
   taxRate: number; // percentage
