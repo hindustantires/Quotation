@@ -80,6 +80,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ initialData, onSav
       customerAddress: '',
       vehicleMake: '',
       vehicleModel: '',
+      vehicleNo: '', // Initialize vehicleNo
       lineItems: [{ ...emptyLineItem, id: crypto.randomUUID(), description: 'E.g., Michelin Primacy 4 - 205/55 R16', unitAmount: 0 }],
       discount: 0,
       taxRate: companyDetails.defaultTaxRate ?? 18,
@@ -221,6 +222,7 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ initialData, onSav
             <FormField label="Address"><Input type="text" name="customerAddress" value={quote.customerAddress} onChange={handleChange} /></FormField>
             <FormField label="Vehicle Make"><Input type="text" name="vehicleMake" value={quote.vehicleMake} onChange={handleChange} /></FormField>
             <FormField label="Vehicle Model"><Input type="text" name="vehicleModel" value={quote.vehicleModel} onChange={handleChange} /></FormField>
+            <FormField label="Vehicle No"><Input type="text" name="vehicleNo" value={quote.vehicleNo || ''} onChange={handleChange} placeholder="Optional" /></FormField>
             <FormField label="Quotation Date"><Input type="date" name="date" value={quote.date} onChange={handleChange} required /></FormField>
         </FormSection>
 

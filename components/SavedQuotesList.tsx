@@ -74,6 +74,7 @@ const QuoteCard: React.FC<{ quote: Quotation, onEdit: () => void, onDelete: () =
             </div>
             <div className="text-sm text-slate-600 mb-4 flex-grow">
                 <p><strong>Vehicle:</strong> {quote.vehicleMake} {quote.vehicleModel}</p>
+                {quote.vehicleNo && <p><strong>Vehicle No:</strong> {quote.vehicleNo}</p>}
                 <p><strong>Date:</strong> {new Date(quote.date).toLocaleDateString()}</p>
                 {quote.isOptionQuote && (
                     <p className="mt-2 text-xs text-indigo-600 bg-indigo-50 inline-block px-2 py-0.5 rounded">Option Quote</p>

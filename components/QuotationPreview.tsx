@@ -44,7 +44,10 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({ quote, compa
                     <p><strong className="text-slate-600">Status:</strong> {quote.status}</p>
                     <div className="mt-2">
                         <h3 className="text-sm font-semibold uppercase text-slate-500 tracking-wider mb-1">Vehicle</h3>
-                        <p className="text-sm text-slate-600">{quote.vehicleMake} {quote.vehicleModel}</p>
+                        <p className="text-sm text-slate-600">
+                             {quote.vehicleMake} {quote.vehicleModel}
+                             {quote.vehicleNo && <span className="block text-slate-500 text-xs mt-1">No: {quote.vehicleNo}</span>}
+                        </p>
                     </div>
                 </div>
             </section>
