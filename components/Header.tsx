@@ -101,6 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
                     </svg>
                 </button>
             </nav>
+        </div>
       </div>
     </header>
   );
