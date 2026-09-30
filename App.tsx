@@ -462,6 +462,7 @@ const App: React.FC = () => {
               onEdit={handleEditQuote}
               onDelete={handleDeleteQuote}
               onCreateNew={handleCreateNew}
+              companyDetails={companyDetails}
             />
           )}
           {view === 'form' && (

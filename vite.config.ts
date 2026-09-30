@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
+      preview: {
+        port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
+        host: '0.0.0.0',
+        allowedHosts: true,
+      },
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
