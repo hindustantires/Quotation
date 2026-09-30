@@ -91,6 +91,19 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                 )}
                  <button
+                    onClick={async () => {
+                      const { downloadProjectZip } = await import('../utils/projectDownloader.ts');
+                      await downloadProjectZip();
+                    }}
+                    className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                    aria-label="Download Source Code (.ZIP)"
+                    title="Download Source Code (.ZIP)"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                </button>
+                 <button
                     onClick={onOpenSettings}
                     className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                     aria-label="Open settings"

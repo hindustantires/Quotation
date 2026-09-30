@@ -1,12 +1,13 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Quotation } from '../types.ts';
+import type { Quotation, CompanyDetails } from '../types.ts';
+import { QuotationPreviewModal } from './QuotationPreviewModal.tsx';
 
 interface SavedQuotesListProps {
   quotes: Quotation[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void; 
   onCreateNew: () => void;
+  companyDetails: CompanyDetails;
 }
 
 const statusColorMap = {
@@ -17,14 +18,19 @@ const statusColorMap = {
     Deleted: 'bg-gray-200 text-gray-800',
 };
 
-const QuoteCard: React.FC<{ quote: Quotation, onEdit: () => void, onDelete: () => void }> = ({ quote, onEdit, onDelete }) => {
+const QuoteCard: React.FC<{ 
+  quote: Quotation; 
+  onEdit: () => void; 
+  onDelete: () => void;
+  onPreview: () => void;
+}> = ({ quote, onEdit, onDelete, onPreview }) => {
     // Internal state to hide the card immediately when delete is clicked
     const [isDeleted, setIsDeleted] = useState(false);
     // 0: Idle, 1: Confirming
     const [deleteStep, setDeleteStep] = useState(0);
     
     const grossTotal = quote.lineItems.reduce((acc, item) => acc + item.quantity * item.unitAmount, 0);
-    const totalAfterDiscount = grossTotal - quote.discount;
+    const totalAfterDiscount = grossTotal - (quote.isOptionQuote ? 0 : quote.discount);
     const grandTotal = Math.round(totalAfterDiscount);
 
     // Reset delete confirmation if user doesn't click within 3 seconds
@@ -36,18 +42,15 @@ const QuoteCard: React.FC<{ quote: Quotation, onEdit: () => void, onDelete: () =
     }, [deleteStep]);
 
     const handleDeleteClick = (e: React.MouseEvent) => {
-        // Force stop propagation to ensure no parent elements catch the click
         e.stopPropagation();
         e.preventDefault();
         
         if (deleteStep === 0) {
-            // First click: Ask for confirmation
             setDeleteStep(1);
             return;
         }
 
         if (deleteStep === 1) {
-            // Second click: Execute "Scorched Earth" delete
             setIsDeleted(true);
             setTimeout(() => {
                 onDelete();
@@ -60,47 +63,79 @@ const QuoteCard: React.FC<{ quote: Quotation, onEdit: () => void, onDelete: () =
         onEdit();
     };
 
-    // If marked as deleted, render nothing.
+    const handlePreviewClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onPreview();
+    };
+
     if (isDeleted) return null;
 
     return (
         <div className="bg-white shadow-md rounded-lg p-4 flex flex-col transition hover:shadow-lg border border-transparent hover:border-slate-200">
             <div className="flex justify-between items-start mb-2">
                 <div>
-                    <p className="font-bold text-lg text-slate-800">{quote.customerName}</p>
-                    <p className="text-sm text-slate-500 font-mono">{quote.quoteNumber}</p>
+                    <p className="font-bold text-lg text-slate-800">{quote.customerName || 'Unnamed Customer'}</p>
+                    <p className="text-sm text-slate-500 font-mono">#{quote.quoteNumber}</p>
                 </div>
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColorMap[quote.status]}`}>{quote.status}</span>
             </div>
-            <div className="text-sm text-slate-600 mb-4 flex-grow">
-                <p><strong>Vehicle:</strong> {quote.vehicleMake} {quote.vehicleModel}</p>
-                {quote.vehicleNo && <p><strong>Vehicle No:</strong> {quote.vehicleNo}</p>}
-                <p><strong>Date:</strong> {new Date(quote.date).toLocaleDateString()}</p>
+
+            <div className="text-sm text-slate-600 mb-4 flex-grow space-y-1">
+                <p><strong>Vehicle:</strong> {quote.vehicleMake || ''} {quote.vehicleModel || 'General'}</p>
+                {quote.vehicleNo && (
+                    <p>
+                        <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-xs font-semibold border border-blue-200">
+                            {quote.vehicleNo}
+                        </span>
+                    </p>
+                )}
+                {quote.customerPhone && (
+                    <p className="text-xs text-slate-500">
+                        <strong>Phone:</strong> {quote.customerPhone}
+                    </p>
+                )}
+                <p className="text-xs text-slate-500">
+                    <strong>Date:</strong> {new Date(quote.date).toLocaleDateString('en-GB')}
+                </p>
                 {quote.isOptionQuote && (
-                    <p className="mt-2 text-xs text-indigo-600 bg-indigo-50 inline-block px-2 py-0.5 rounded">Option Quote</p>
+                    <p className="mt-1 text-xs text-indigo-600 bg-indigo-50 inline-block px-2 py-0.5 rounded">Option Quote</p>
                 )}
             </div>
+
             <div className="border-t pt-2">
                 {quote.isOptionQuote ? (
                      <p className="text-right text-sm font-medium text-slate-500">Multiple Options</p>
                 ) : (
-                     <p className="text-right text-2xl font-bold text-slate-900">₹{grandTotal.toFixed(2)}</p>
+                     <p className="text-right text-2xl font-bold text-slate-900">₹{grandTotal.toLocaleString('en-IN')}</p>
                 )}
             </div>
-            <div className="mt-4 flex justify-end space-x-2">
+
+            <div className="mt-4 flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button 
+                    type="button"
+                    onClick={handlePreviewClick} 
+                    className="text-xs sm:text-sm px-2.5 py-1.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition font-medium flex items-center gap-1 border border-indigo-200"
+                    title="Preview, Download PDF or Send via WhatsApp / Email"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>Share / PDF</span>
+                </button>
                 <button 
                     type="button"
                     onClick={handleEditClick} 
-                    className="text-sm px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition font-medium"
+                    className="text-xs sm:text-sm px-2.5 py-1.5 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition font-medium border border-slate-200"
                 >
                     Edit
                 </button>
                 <button 
                     type="button"
                     onClick={handleDeleteClick} 
-                    className={`text-sm px-3 py-1.5 rounded-md transition font-medium border ${
+                    className={`text-xs sm:text-sm px-2.5 py-1.5 rounded-md transition font-medium border ${
                         deleteStep === 1 
-                        ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 shadow-md transform scale-105' 
+                        ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 shadow-sm' 
                         : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700'
                     }`}
                 >
@@ -111,9 +146,16 @@ const QuoteCard: React.FC<{ quote: Quotation, onEdit: () => void, onDelete: () =
     );
 };
 
-export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit, onDelete, onCreateNew }) => {
+export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ 
+  quotes, 
+  onEdit, 
+  onDelete, 
+  onCreateNew,
+  companyDetails 
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchDate, setSearchDate] = useState('');
+  const [previewQuote, setPreviewQuote] = useState<Quotation | null>(null);
 
   const sortedQuotes = useMemo(() => 
     [...quotes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -121,7 +163,9 @@ export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit
 
   const filteredQuotes = useMemo(() => {
     return sortedQuotes.filter(quote => {
-        const nameMatch = quote.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+        const nameMatch = (quote.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (quote.vehicleNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (quote.quoteNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
         const dateMatch = searchDate ? quote.date === searchDate : true;
         return nameMatch && dateMatch;
     });
@@ -148,23 +192,33 @@ export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit
                   </button>
               </div>
           </div>
-      )
+      );
   }
 
   return (
     <div>
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-3xl font-bold text-slate-800">All Quotations</h2>
+            <button
+                type="button"
+                onClick={onCreateNew}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                New Quote
+            </button>
         </div>
 
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm flex items-center gap-4 flex-wrap">
             <div className="relative flex-grow min-w-[200px]">
                 <input
                     type="text"
-                    placeholder="Search by customer name..."
+                    placeholder="Search by customer, vehicle no, or quote #..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-100 hover:bg-slate-200 transition-colors placeholder-slate-500"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 hover:bg-slate-100 transition-colors placeholder-slate-400 text-sm"
                 />
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
             </div>
@@ -173,7 +227,7 @@ export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit
                     type="date"
                     value={searchDate}
                     onChange={e => setSearchDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-100 hover:bg-slate-200 transition-colors"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 hover:bg-slate-100 transition-colors text-sm"
                 />
             </div>
             {(searchTerm || searchDate) && (
@@ -194,6 +248,7 @@ export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit
                         quote={quote}
                         onEdit={() => onEdit(quote.id)}
                         onDelete={() => onDelete(quote.id)}
+                        onPreview={() => setPreviewQuote(quote)}
                     />
                 ))}
             </div>
@@ -202,6 +257,14 @@ export const SavedQuotesList: React.FC<SavedQuotesListProps> = ({ quotes, onEdit
                 <h3 className="text-lg font-medium text-slate-900">No quotations match your search</h3>
                 <p className="mt-1 text-sm text-slate-500">Try adjusting your search terms or clearing the filters.</p>
             </div>
+        )}
+
+        {previewQuote && (
+          <QuotationPreviewModal
+            quote={previewQuote}
+            companyDetails={companyDetails}
+            onClose={() => setPreviewQuote(null)}
+          />
         )}
     </div>
   );

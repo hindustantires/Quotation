@@ -216,6 +216,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ details, onSave, o
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-2 border-b pb-2 text-slate-700 flex items-center justify-between">
+                  <span>Source Code Export (For GitHub)</span>
+                  <span className="text-xs font-normal text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Ready to download</span>
+                </h3>
+                <p className="text-xs text-slate-600 mb-3">
+                  Download the complete, up-to-date source code with single-page A4 PDF, WhatsApp/Email share, and latest fixes as a ZIP file.
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { downloadProjectZip } = await import('../utils/projectDownloader.ts');
+                      await downloadProjectZip();
+                    }}
+                    className="inline-flex items-center px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-md hover:bg-slate-800 transition shadow-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Source Code (.ZIP)
+                  </button>
+                </div>
+                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-600 space-y-1">
+                  <p className="font-semibold text-slate-800">How to update your existing GitHub repository:</p>
+                  <p>1. Click the button above to download the ZIP to your computer or phone.</p>
+                  <p>2. Extract the ZIP file.</p>
+                  <p>3. Go to your repository on GitHub, click <strong>Add file → Upload files</strong>, drag &amp; drop the files, and click <strong>Commit changes</strong>.</p>
+                </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4 border-b pb-2 text-slate-700">Data Management</h3>
                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                     <button

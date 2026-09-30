@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Quotation, LineItem, CompanyDetails } from '../types.ts';
-import { QuotationPreview } from './QuotationPreview.tsx';
+import { QuotationPreviewModal } from './QuotationPreviewModal.tsx';
 
 interface QuotationFormProps {
   initialData: Quotation | null;
@@ -90,7 +90,6 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ initialData, onSav
     }
   );
   const [showPreview, setShowPreview] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -141,50 +140,9 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ initialData, onSav
     return { subtotal, totalTax, roundOff, grandTotal };
   }, [quote.lineItems, quote.discount, quote.taxRate, quote.isOptionQuote]);
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(quote);
-  };
-
-  const handleShareWhatsApp = () => {
-    const totalText = quote.isOptionQuote ? 'See attached for options' : `₹${grandTotal.toFixed(2)}`;
-    const text = `Hello ${quote.customerName},\n\nHere is your quotation from ${companyDetails.name}.\n\n*Quote Number:* ${quote.quoteNumber}\n*Date:* ${new Date(quote.date).toLocaleDateString()}\n*Vehicle:* ${quote.vehicleMake} ${quote.vehicleModel}\n*Grand Total:* ${totalText}\n\nPlease find the full details in the attached document. We recommend printing this page to PDF to share.\n\nThank you,\n${companyDetails.name}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleShareEmail = () => {
-    if (!quote.customerEmail) return;
-    const totalText = quote.isOptionQuote ? 'See attached for options' : `₹${grandTotal.toFixed(2)}`;
-    const subject = `Quotation from ${companyDetails.name} - #${quote.quoteNumber}`;
-    const body = `Dear ${quote.customerName},\n\nThank you for your inquiry. Please find your quotation from ${companyDetails.name} attached.\n\n---\nQuotation Summary\n---\n* Quote Number: ${quote.quoteNumber}\n* Date: ${new Date(quote.date).toLocaleDateString()}\n* Vehicle: ${quote.vehicleMake} ${quote.vehicleModel}\n* Grand Total: ${totalText}\n\n---\n\nWe have attached a detailed breakdown of the costs. Please print this quotation to PDF to attach it to this email.\n\nIf you have any questions, please feel free to contact us.\n\nBest regards,\n\nThe team at ${companyDetails.name}\n${companyDetails.phone}\n${companyDetails.email}`;
-    const url = `mailto:${quote.customerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
-  };
-
-  const handlePrint = () => {
-    if (!printRef.current) return;
-    
-    const content = printRef.current.innerHTML;
-    const printWindow = window.open('', '', 'height=800,width=800');
-
-    if (printWindow) {
-      printWindow.document.write('<html><head><title>Quotation</title>');
-      printWindow.document.write('<script src="https://cdn.tailwindcss.com"></script>');
-      printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">');
-      printWindow.document.write('<style>body { font-family: "Inter", sans-serif; }</style>');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write(content);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      }, 250); // Small delay to allow styles to load
-    }
   };
 
   return (
@@ -316,35 +274,11 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({ initialData, onSav
     </form>
     
     {showPreview && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-slate-100 w-full max-w-4xl h-full max-h-[90vh] rounded-lg shadow-2xl flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h2 className="text-xl font-bold">Quotation Preview</h2>
-            <div className="flex items-center space-x-2">
-                <button onClick={handleShareWhatsApp} title="Share on WhatsApp" className="flex items-center px-3 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 mr-1.5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.75 13.96c.25.5.12 1.08-.29 1.48-.37.37-.84.58-1.33.58h-.02c-.55 0-1.11-.23-1.53-.62l-1.4-1.39c-.19-.19-.39-.32-.61-.43-.4-.2-.84-.31-1.3-.31-.59 0-1.15.22-1.57.59l-.49.49c-.19.19-.44.29-.7.29-.22 0-.44-.07-.63-.21-.33-.24-.54-.62-.54-1.03 0-.31.11-.6.3-.83l.07-.07c.29-.29.47-.68.47-1.1 0-.49-.24-.95-.63-1.25l-.49-.39c-.43-.34-.95-.53-1.5-.53-.59 0-1.14.23-1.54.62l-.4.4c-.4.4-.63.95-.63-1.54 0-1.02.4-2.04 1.2-2.83.79-.79 1.8-1.2 2.83-1.2.95 0 1.83.33 2.54.95l.07.07c.66.58 1.08 1.4 1.12 2.3.02.6-.14 1.18-.5 1.68l-.42.59c-.29.41-.46.9-.46 1.42 0 .4.11.78.33 1.1l1.45 1.45c.19.19.45.29.71.29.39 0 .76-.22.95-.58.19-.36.21-.78.05-1.16l-.21-.51c-.16-.39-.15-.83.05-1.2.2-.37.54-.62.94-.68.6-.09 1.18.15 1.53.62l.29.41c.21.3.33.65.33 1.02 0 .5-.21 1-.61 1.36l-.07.07z"/></svg>
-                    WhatsApp
-                </button>
-                 <button 
-                    onClick={handleShareEmail} 
-                    title={!quote.customerEmail ? "Enter a customer email to enable sharing" : "Share via Email"} 
-                    className="flex items-center px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed" 
-                    disabled={!quote.customerEmail}
-                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
-                    Email
-                </button>
-                <button onClick={handlePrint} className="px-4 py-2 text-sm bg-slate-600 text-white rounded-md hover:bg-slate-700">Print</button>
-                <button onClick={() => setShowPreview(false)} className="p-2 text-slate-500 hover:text-slate-800 rounded-full hover:bg-slate-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-          </div>
-          <div className="overflow-y-auto flex-grow p-2" ref={printRef}>
-            <QuotationPreview quote={quote} companyDetails={companyDetails} />
-          </div>
-        </div>
-      </div>
+      <QuotationPreviewModal
+        quote={quote}
+        companyDetails={companyDetails}
+        onClose={() => setShowPreview(false)}
+      />
     )}
     </>
   );
